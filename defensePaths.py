@@ -2,7 +2,7 @@ import math, random, sys
 from panda3d.core import *
 
 
-def cloud(radius = 1):
+def Cloud(radius = 1):
     x = 2 * random.random() - 1
     y = 2 * random.random() - 1
     z = 2 * random.random() - 1
@@ -32,33 +32,6 @@ def BaseballSeams(step, numSeams, B, F = 1):
     return Vec3(x, y, z)
 
 
-def CircleX():
-    x = 0
-    for i in range(100):
-        theta = x
-        self.placeholder2 = self.render.attachNewNode('Placeholder2')
-        self.placeholder2.setPos(50.0 * math.cos(theta), 50.0 * math.sin(theta), 0.0 * math.tan(theta))
-        red = 0.6 + random.random() * 0.4
-        blue = 0.0 + random.random() * 0.0
-        green = 0.0 + random.random() * 0.0
-        self.placeholder2.setColorScale(red, blue, green, 1.0)
-        self.parent.instanceTo(self.placeholder2)
-        x = x + 0.06
-
-def CircleY():
-    y = 0
-    for i in range(100):
-        theta = y
-        self.placeholder2 = self.render.attachNewNode('Placeholder2')
-        self.placeholder2.setPos(50.0 * math.sin(theta), 0.0 * math.cos(theta), 50.0 * math.cos(theta))
-        red = 0.0 + random.random() * 0.0
-        blue = 0.6 + random.random() * 0.4
-        green = 0.0 + random.random() * 0.0
-        self.placeholder2.setColorScale(red, blue, green, 1.0)
-        self.parent.instanceTo(self.placeholder2)
-        y = y + 0.06
-
-def CircleZ():
     z = 0
     for i in range(100):
         theta = z
