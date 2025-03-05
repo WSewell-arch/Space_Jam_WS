@@ -1,5 +1,6 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import *
+from panda3d.core import CollisionTraverser, CollisionHandlerPusher
 import Space_Jam_Classes as space_jam_classes
 import defensePaths as Defensepaths
 import math, sys, random
@@ -9,9 +10,9 @@ class myApp(ShowBase):
 
     def __init__(self):
         ShowBase.__init__(self)
-        
+   
 
-        base.disableMouse()
+        #base.disableMouse()
         
 
         
@@ -39,44 +40,18 @@ class myApp(ShowBase):
             #Ship
             self.Ship = space_jam_classes.Spaceship(self.loader, "./Assets/Spaceships/Dumbledore/Dumbledore.x", self.render, "Spaceship", (-1000, 1000, 800), 50)
 
+            self.cTrav = CollisionTraverser()
+            self.cTrav.traverse(self.render)
+            self.pusher = CollisionHandlerPusher()
+            #self.pusher.addCollider(self.Ship, self.Ship.modelNode)
+            #self.cTrav.addCollider(self.Ship, self.pusher)
+
+            self.cTrav.showCollisions(self.render)
+
+
 
             self.parent = self.loader.loadModel("./C_Assets/cube")      
-         
-            x = 0
-            for i in range(100):
-                theta = x
-                self.placeholder2 = self.render.attachNewNode('Placeholder2')
-                self.placeholder2.setPos(50.0 * math.cos(theta), 50.0 * math.sin(theta), 0.0 * math.tan(theta))
-                red = 0.6 + random.random() * 0.4
-                blue = 0.0 + random.random() * 0.0
-                green = 0.0 + random.random() * 0.0
-                self.placeholder2.setColorScale(red, blue, green, 1.0)
-                self.parent.instanceTo(self.placeholder2)
-                x = x + 0.06
-    
-            y = 0
-            for i in range(100):
-                theta = y
-                self.placeholder2 = self.render.attachNewNode('Placeholder2')
-                self.placeholder2.setPos(50.0 * math.sin(theta), 0.0 * math.cos(theta), 50.0 * math.cos(theta))
-                red = 0.0 + random.random() * 0.0
-                blue = 0.6 + random.random() * 0.4
-                green = 0.0 + random.random() * 0.0
-                self.placeholder2.setColorScale(red, blue, green, 1.0)
-                self.parent.instanceTo(self.placeholder2)
-                y = y + 0.06
         
-            z = 0
-            for i in range(100):
-                theta = z
-                self.placeholder2 = self.render.attachNewNode('Placeholder2')
-                self.placeholder2.setPos(0.0 * math.cos(theta), 50.0 * math.cos(theta), 50.0 * math.sin(theta))
-                red = 0.0 + random.random() * 0.0
-                blue = 0.0 + random.random() * 0.0
-                green = 0.6 + random.random() * 0.4
-                self.placeholder2.setColorScale(red, blue, green, 1.0)
-                self.parent.instanceTo(self.placeholder2)
-                z = z + 0.06
 
             fullCycle = 60
 
@@ -87,13 +62,10 @@ class myApp(ShowBase):
                 self.DrawCloudDefense(self.Planet1, nickName)
                 self.DrawBaseballSeams(self.SpaceStation1, nickName, j, fullCycle, 2)
             
-            self.SetCamera()
-
-
-    
-             
-
-
+            #self.SetCamera()
+            self.CircleX()
+            self.CircleY()
+            self.CircleZ()
         
 
         SetupScene()
@@ -118,18 +90,47 @@ class myApp(ShowBase):
         self.camera.reparentTo(self.Ship.modelNode)
         self.camera.setFluidPos(0,1,0)
     
-    #def CircleX(self):
+    def CircleX(self):
+         x = 0
+         for i in range(100):
+            theta = x
+            self.placeholder2 = self.render.attachNewNode('Placeholder2')
+            self.placeholder2.setPos(50.0 * math.cos(theta), 50.0 * math.sin(theta), 0.0 * math.tan(theta))
+            red = 0.6 + random.random() * 0.4
+            blue = 0.0 + random.random() * 0.0
+            green = 0.0 + random.random() * 0.0
+            self.placeholder2.setColorScale(red, blue, green, 1.0)
+            self.parent.instanceTo(self.placeholder2)
+            x = x + 0.06
 
-
-
+    def CircleY(self):
+        y = 0
+        for i in range(100):
+            theta = y
+            self.placeholder2 = self.render.attachNewNode('Placeholder2')
+            self.placeholder2.setPos(50.0 * math.sin(theta), 0.0 * math.cos(theta), 50.0 * math.cos(theta))
+            red = 0.0 + random.random() * 0.0
+            blue = 0.6 + random.random() * 0.4
+            green = 0.0 + random.random() * 0.0
+            self.placeholder2.setColorScale(red, blue, green, 1.0)
+            self.parent.instanceTo(self.placeholder2)
+            y = y + 0.06
         
+    def CircleZ(self):
+        z = 0
+        for i in range(100):
+            theta = z
+            self.placeholder2 = self.render.attachNewNode('Placeholder2')
+            self.placeholder2.setPos(0.0 * math.cos(theta), 50.0 * math.cos(theta), 50.0 * math.sin(theta))
+            red = 0.0 + random.random() * 0.0
+            blue = 0.0 + random.random() * 0.0
+            green = 0.6 + random.random() * 0.4
+            self.placeholder2.setColorScale(red, blue, green, 1.0)
+            self.parent.instanceTo(self.placeholder2)
+            z = z + 0.06
 
 
-        
     
-            
-
-
 
 
 
