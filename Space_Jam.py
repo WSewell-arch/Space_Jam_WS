@@ -4,6 +4,8 @@ from panda3d.core import CollisionTraverser, CollisionHandlerPusher
 import Space_Jam_Classes as space_jam_classes
 import defensePaths as Defensepaths
 import math, sys, random
+from direct.task import Task
+
 
 
 class myApp(ShowBase):
@@ -12,7 +14,7 @@ class myApp(ShowBase):
         ShowBase.__init__(self)
    
 
-        #base.disableMouse()
+        base.disableMouse()
         
 
         
@@ -50,7 +52,7 @@ class myApp(ShowBase):
 
 
 
-            self.parent = self.loader.loadModel("./C_Assets/cube")      
+            self.parent = self.loader.loadModel("./C_Assets/cube")
         
 
             fullCycle = 60
@@ -62,10 +64,11 @@ class myApp(ShowBase):
                 self.DrawCloudDefense(self.Planet1, nickName)
                 self.DrawBaseballSeams(self.SpaceStation1, nickName, j, fullCycle, 2)
             
-            #self.SetCamera()
+            self.SetCamera()
             self.CircleX()
             self.CircleY()
             self.CircleZ()
+            
         
 
         SetupScene()
@@ -128,11 +131,9 @@ class myApp(ShowBase):
             self.placeholder2.setColorScale(red, blue, green, 1.0)
             self.parent.instanceTo(self.placeholder2)
             z = z + 0.06
-
-
-    
-
-
+         
+    def controls(self):
+        space_jam_classes.SetKeyBindings()
 
 
 
