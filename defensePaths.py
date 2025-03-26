@@ -31,17 +31,5 @@ def BaseballSeams(step, numSeams, B, F = 1):
 
     return Vec3(x, y, z)
 
-
-    z = 0
-    for i in range(100):
-        theta = z
-        self.placeholder2 = self.render.attachNewNode('Placeholder2')
-        self.placeholder2.setPos(0.0 * math.cos(theta), 50.0 * math.cos(theta), 50.0 * math.sin(theta))
-        red = 0.0 + random.random() * 0.0
-        blue = 0.0 + random.random() * 0.0
-        green = 0.6 + random.random() * 0.4
-        self.placeholder2.setColorScale(red, blue, green, 1.0)
-        self.parent.instanceTo(self.placeholder2)
-        z = z + 0.06
      
 

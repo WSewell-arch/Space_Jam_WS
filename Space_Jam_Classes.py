@@ -94,44 +94,10 @@ class SpaceStation(CapsuleColliableObject):
         self.modelNode.setName(nodeName)
 
 class Spaceship(ShowBase):
+
      
-     def Thrust(self, keyDown):
-        if keyDown:
-            self.taskManager.add(self.ApplyThrust,'forward-thrust')
-        else:
-            self.taskMgr.remove('forward-thrust')
-
-     def ApplyThrust(self, task):
-          rate = 5
-          trajectory = self.render.getRelativeVector(self.modelNode, Vec3.forward())
-          
-          trajectory.normalize()
-          self.modelNode.setFluidPos(self.modelNode.getPos() + trajectory * rate)
-          
-          return Task.cont
-     
-     def LeftTurn(self, keyDown):
-        if keyDown:
-            self.taskManager.add(self.ApplyLeftTurn, 'left-turn')
-        else:
-            self.taskMgr.remove('left-turn')
-         
-     def ApplyLeftTurn(self, task):
-         # Half a degree turn every time
-          rate = 0.5
-          
-          self.modelNode.setH(self.modelNode.getH() + rate)
-          return Task.cont
-     
-     def SetKeyBindings(self):
-        self.accept("space", self.Thrust, [1])
-        self.accept("space-up", self.Thrust, [0])
-
-        self.accept("left", self.LeftTurn, [1])
-        self.accept("left-up", self.LeftTurn, [0])
-
-
-     def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, posVec: Vec3, scaleVec: float):
+    
+     def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, posVec: Vec3, scaleVec: float, manager = Task):
 
         self.modelNode = loader.loadModel(modelPath)
         self.modelNode.reparentTo(parentNode)
@@ -139,16 +105,18 @@ class Spaceship(ShowBase):
         self.modelNode.setScale(scaleVec)
 
         self.modelNode.setName(nodeName)
-        self.SetKeyBindings().modelNode
+        self.taskManager = manager
+
+
+
         
-        
-    
 
         #self.reloadTime = .25
         #self.missleDistance = 4000 #until Missiles Explode
         #self.missleBay = 1 #only One missile in the bay to be fired
         #self.taskMgr.add(self.CheckIntervals,"CheckMissles", 34)
-    
+
+
      def CheckIntervals(self, task):
          for i in Missle.Intervals:
              if not Missle.Intervals[i].isplaying():
@@ -168,40 +136,6 @@ class Spaceship(ShowBase):
          self.HUD = OnscreenImage(image= "./Assets/Hud/Reticle3b.png", pos = Vec3(0, 0, 0), scale = 0.1)
          self.HUD.setTransparency(TransparencyAttrib.MAlpha)
          
-    
-     #def ApplyThrust(self, Task):
-          #rate = 5
-          #trajectory = self.render.getRelativeVector(self.modelNode, Vec3.forward())
-          
-          #trajectory.normalize()
-          #self.modelNode.setFluidPos(self.modelNode.getPos() + trajectory * rate)
-          
-          #return Task.cont
-     
-     #def LeftTurn(self, keyDown):
-    #    if keyDown:
-    #        self.taskManager.add(self.ApplyLeftTurn, "left-turn")
-    #    else:
-    #        self.taskManager.remove("left-turn")
-
-     #def ApplyLeftTurn(self, Task):
-         # Half a degree turn every time
-          #rate = 0.5
-          
-         # self.modelNode.setH(self.modelNode.getH() + rate)
-        #  return Task.cont
-     
-     def RightTurn(self, keyDown):
-         if keyDown:
-             self.taskManager.add(self.ApplyRightTurn, "right-turn")
-         else:
-             self.taskManager.remove('right-turn')
-
-     def ApplyRightTurn(self, Task):
-         rate = 0.5
-         self.modelNode.setR(self.modelNode.getR() + rate)
-         
-         return Task.cont
      
      def fire(self):
          if self.missleBay:
@@ -219,6 +153,8 @@ class Spaceship(ShowBase):
              currentMissle = Missle(self.loader, "./Assets/Phaser/phaser.egg", self.render, tag, posVec, 4.0)
              Missle.intervals[tag] = currentMissle.modelNode.posInterval(2.0, travRec, startPos = posVec, fluid = 1)
              Missle.Intervals[tag].start()
+
+             self.traverser.addCollider(currentMissle.collisionNode, self.handler)
 
          else:
              # If we aren't reloading, we want to start reloading
@@ -240,10 +176,11 @@ class Spaceship(ShowBase):
          elif task.time <= self.reloadTime:
              print("reload Proceeding")
              return Task.cont
+#def SetKeyBindings(self):
+    #self.accept('space', self.Thrust, [1])
+    #self.accept('space-up', self.Thrust,[0])
+#SetKeyBindings(Spaceship)
 
-
-    
-             
     
 class Spaceship(SphereCoilliableObject):
     def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, posVec: Vec3, scaleVec: float):
@@ -262,6 +199,8 @@ class Missle(SphereCoilliableObject):
         
     def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, posVec : Vec3, scaleVec: float = 1.0):
         super(Missle, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0,0,0), 3.0)
+
+        self.modelNode = loader.loadModel(modelPath)
         self.modelNode.setScale(scaleVec)
         self.modelNode.setPos(posVec)
 
