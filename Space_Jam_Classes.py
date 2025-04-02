@@ -1,8 +1,10 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import *
 from direct.task import Task
+from direct.task.Task import TaskManager
 from CollideObjectBase import *
 from direct.gui.OnscreenImage import OnscreenImage
+import defensePaths as Defensepaths
 
 
 
@@ -195,10 +197,14 @@ class Missle(SphereCoilliableObject):
     cNodes = {}
     collisionSolids = {}
     Intervals = {}
-    missleCount = {}
-        
+    missleCount = 0
+
+
+
+    
     def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, posVec : Vec3, scaleVec: float = 1.0):
-        super(Missle, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0,0,0), 3.0)
+        super(Missle, self).__init__(loader, modelPath, parentNode, nodeName, 0,0,0, 3.0)
+
 
         self.modelNode = loader.loadModel(modelPath)
         self.modelNode.setScale(scaleVec)
@@ -211,7 +217,48 @@ class Missle(SphereCoilliableObject):
         Missle.cNodes[nodeName].show()
 
         print("Fire Torpedo #" + str(Missle.missleCount))
+
+
+class Orbiter(SphereCoilliableObject):
+    numOrbits = 0
+    velocity = 0.005
+    cloudTimer = 240
+
+    def __init__(self, loader: Loader, taskMGR: TaskManager ,modelPath: str, parentNode: NodePath, nodeName: str, scaleVec: Vec3, texpath : str,
+                 centralObject: PlacedObject, orbitRadius: float, orbitType: str, staringAt: Vec3):
+        super(Orbiter, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0,0,0), 3.2)
        
+        self.taskMgr = taskMGR
+        self.orbitType = orbitType
+        self.modelNode.setScale(scaleVec)
+        tex = loader.loadTexture(texpath)
+        self.modelNode.setTexture(tex, 1)
+        self.orbitObject = centralObject
+        self.orbitRadius = orbitRadius
+        self.startingat = staringAt
+        Orbiter.numOrbits += 1
+
+        self.cloudClock = 0
+
+        self.taskFlag = "Traveler-" + str(Orbiter.numOrbits)
+        taskMGR.add(self.Orbit, self.taskFlag)
+
+    def orbit(self, task):
+        if self.orbitType == "MLB":
+            positionVec = Defensepaths.BaseballSeams(task.time * Orbiter.velocity, self.numOrbits, 2.0)
+            self.modelNode.setPos(positionVec * self.orbitRadius + self.orbitObject.modelNode.getPos())
+
+        elif self.orbitType == "cloud":
+            if self.cloudClock < Orbiter.cloudTimer:
+                self.cloudClock += 1
+
+            else:
+                self.cloudClock = 0
+                positionVec = Defensepaths.Cloud()
+                self.modelNode.setPos(positionVec * self.orbitRadius + self.orbitObject.modelNode.getPos())
+
+        self.modelNode.lookAt(self.startingat.modelNode)
+        return Task.cont
 
 
       

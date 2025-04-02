@@ -66,6 +66,11 @@ class myApp(ShowBase):
             self.handler.addInPattern('into')
             self.accept('into', self.HandleInto)
 
+            #self.Sentinal1 = space_jam_classes.Orbiter(self.loader, self.taskMgr, self.rootAssetFolder + "./Assets/DroneDefender/DroneDefender.obj", self.render,
+            #"Drone", 6.0, self.rootAssetFolder + "/DroneDefender/DroneDefender.auv", self.Planet5, "MLB", self.Ship)
+            #self.Sentinal2 = space_jam_classes.Orbiter(self.loader, self.taskMgr, self.rootAssetFolder + "./Assets/DroneDefender/DroneDefender.obj", self.render,
+            #"Drone", 6.0, self.rootAssetFolder + "/DroneDefender/DroneDefender.auv", self.Planet5, "MLB", self.Ship)
+            
 
 
 
@@ -80,12 +85,13 @@ class myApp(ShowBase):
 
                 self.DrawCloudDefense(self.Planet1, nickName)
                 self.DrawBaseballSeams(self.SpaceStation1, nickName, j, fullCycle, 2)
+
+
             
             self.SetCamera()
             self.CircleX()
             self.CircleY()
             self.CircleZ()
-            #self.controls()
             
         
 
@@ -150,9 +156,6 @@ class myApp(ShowBase):
             self.parent.instanceTo(self.placeholder2)
             z = z + 0.06
          
-    def controls(self):
-        s_cont = space_jam_classes.SetKeyBindings(self)
-        return s_cont
 
     def HandleInto(self, entry):
         fromNode = entry.getFromNodePath().getName()

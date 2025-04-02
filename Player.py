@@ -6,12 +6,18 @@ from direct.task import Task
 import Space_Jam_Classes as space_jam_classes
 from direct.gui.OnscreenImage import OnscreenImage
 
+from panda3d.core import CollisionHandlerEvent
+from direct.interval.LerpInterval import LerpFunc
+from direct.particles.ParticleEffect import ParticleEffect
+import re
+
 
 
 class Spaceship(SphereCoilliableObject):
     def __init__(self, loader: Loader, taskMGR: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode: NodePath, nodeName: str, texPath: str ,posVec: Vec3, scaleVec: float):
         super(Spaceship, self).__init__(loader, modelPath, parentNode, nodeName, 0,0,1, 1)
 
+        self.loader = loader
         self.TaskMGR = taskMGR
         self.accept = accept
         self.render = parentNode
@@ -23,12 +29,29 @@ class Spaceship(SphereCoilliableObject):
         
 
         self.SetKeyBindings()
+        self.TaskMGR.add(self.CheckIntervals, 'checkMissles', 34)
+        self.EnableHUD()
+
 
         self.reloadTime = .25
         self.missleDistance = 4000 #Until missle explodes
         self.missleBay = 1
 
-        #self.TaskMGR.add(self.checkIntervals, 'checkMissles', 34)
+        self.S_reloadTime = .10
+        self.S_missleDistance = 1000
+        self.S_missleBay = 2
+
+        self.cntExplode = 0
+        self.explodeIntervlas = {}
+        
+        #self.traverser = traverser
+
+        self.handler = CollisionHandlerEvent()
+        self.handler.addInPattern('into')
+        #self.accept('into', self.HandleInto)
+
+
+
 
     def CheckIntervals(self, task):
         for i in space_jam_classes.Missle.Intervals:
@@ -46,8 +69,7 @@ class Spaceship(SphereCoilliableObject):
             return Task.cont 
          
     def EnableHUD(self):
-        self.HUD = OnscreenImage(image= "./Assets/Hud/Reticle3b.png", pos = Vec3(0, 0, 0), scale = 0.1)
-        self.HUD.setTransparency(TransparencyAttrib.MAlpha)
+        self.Hud = OnscreenImage(image= "./Assets/Hud/Reticle3b.png", pos = Vec3(0, 0, 0), scale = 0.1)
     
     def SetKeyBindings(self):
         self.accept('space', self.Thrust, [1])
@@ -74,7 +96,11 @@ class Spaceship(SphereCoilliableObject):
         self.accept('e', self.RightRoll, [1])
         self.accept('e-up', self.RightRoll, [0])
 
-        #self.accept('f', self.fire)
+        self.accept('q', self.BarrelRoll, [1])
+        self.accept('q-up', self.BarrelRoll, [0])
+
+        self.accept('f', self.fire)
+        self.accept('g', self.S_fire)
     
     def Thrust(self, keyDown):
         if keyDown:
@@ -170,7 +196,18 @@ class Spaceship(SphereCoilliableObject):
         rate = 1
         self.modelNode.setR(self.modelNode.getR() - rate)
         return Task.cont
+
+    def BarrelRoll(self, KeyDown):
+        if KeyDown:
+            self.TaskMGR.add(self.ApplyBRoll, 'Barrel-Roll')
+        else:
+            self.TaskMGR.remove('Barrel-Roll')
     
+    def ApplyBRoll(self, task):
+        rate = 100
+        self.modelNode.setR(self.modelNode.getR() + rate)
+        return Task.cont
+
     def fire(self):
         if self.missleBay:
             travRate = self.missleDistance
@@ -185,18 +222,45 @@ class Spaceship(SphereCoilliableObject):
 
             posVec = self.modelNode.getPos() + inFront #Spawns the missles in front of ship
             #Create Missle
-            currentMissle = space_jam_classes.Missle(self.loader, './Assets/Phaser/phaser.x', self.render, tag, posVec, 4.0)     
-            space_jam_classes.Missle.intervals[tag] = currentMissle.modelNode.posInterval(2.0, travVec, startPos = posVec, fluid = 1)
+            currentMissle = space_jam_classes.Missle(self.loader, './Assets/Phaser/phaser.x', self.render, tag, posVec, 7.0)     
+            space_jam_classes.Missle.Intervals[tag] = currentMissle.modelNode.posInterval(2.0, travVec, startPos = posVec, fluid = 1)
             space_jam_classes.Missle.Intervals[tag].start()
+
+            #self.traverser.addCollider(currentMissle.collisionNode, self.handler)
 
         else:
              # If we aren't reloading, we want to start reloading
-              if not self.taskMgr.hasTaskNamed('reload'):
+              if not self.TaskMGR.hasTaskNamed('reload'):
                  print('initialzing reload...')
                  # Call the reload method without delay
-                 self.taskMgr.doMethodLater(0, self.reload, "reload")
+                 self.TaskMGR.doMethodLater(0, self.reload, "reload")
                  return Task.cont
-              
+
+    def S_fire(self):
+        if self.S_missleBay:
+            travRate = self.missleDistance
+            aim = self.render.getRelativeVector(self.modelNode, Vec3.forward())
+            aim.normalize()
+            fireSolution = aim * travRate
+            inFront = aim * 150
+
+            travVec = fireSolution + self.modelNode.getPos()
+            self.S_missleBay -= 2
+            tag = "Shotgun-Missle" + str(space_jam_classes.Missle.missleCount)
+
+            posVec = self.modelNode.getPos() + inFront #Spawns the missles in front of ship
+            #Create Missle
+            currentMissle = space_jam_classes.Missle(self.loader, './Assets/Phaser/phaser.x', self.render, tag, posVec, 4.0)     
+            space_jam_classes.Missle.Intervals[tag] = currentMissle.modelNode.posInterval(2.0, travVec, startPos = posVec, fluid = 1)
+            space_jam_classes.Missle.Intervals[tag].start()
+
+        else:
+            if not self.TaskMGR.hasTaskNamed('reload'):
+                print('initialzing reload...')
+                # Call the reload method without delay
+                self.TaskMGR.doMethodLater(0, self.S_reload, "reload")
+                return Task.cont
+
     def reload(self, task):
         if task.time > self.reloadTime:
              self.missleBay -= 1
@@ -210,4 +274,36 @@ class Spaceship(SphereCoilliableObject):
              print("reload Proceeding")
              return Task.cont
 
-       
+    def S_reload(self, task):
+        if task.time > self.S_reloadTime:
+             self.S_missleBay -= 1
+             print("Reload Complete")
+             
+        if self.S_missleBay > 1:
+             self.S_missleBay = 1
+             return Task.done
+         
+        elif task.time <= self.S_reloadTime:
+             print("reload Proceeding")
+             return Task.cont
+
+
+    def HandleInto(self, entry):
+        fromNode = entry.getFromNodePath().getName()
+        print('fromNode: ' + fromNode)
+        intoNode = entry.getIntoNodePath().getName()
+        intoPosition = Vec3(entry.getSurfacePoint(self.render))
+
+        tempvar = fromNode.split("_")
+        print("Tempvar : " + str(tempvar))
+        shooter = tempvar[0]
+        print("shooter: " + str(shooter))
+        tempvar = intoNode.split("_")
+        print("tempvar1 : " + str(tempvar))
+        tempvar = intoNode.split("_")
+        print("tempvar2 : " + str(tempvar))
+        victim = tempvar[2]
+        print("Victim: " + str(victim))
+
+        pattern = r'[0-9]'
+        strippedString = re.sub(pattern, '', victim)
