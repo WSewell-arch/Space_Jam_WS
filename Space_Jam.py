@@ -45,31 +45,24 @@ class myApp(ShowBase):
             #SpaceStation
             self.SpaceStation1 = space_jam_classes.SpaceStation(self.loader, "./Assets/Space Station/spaceStation.x", self.render, "Space Station",  (-1500, 1000, 800), 50)
             #Ship
-            self.Ship = playerclass.Spaceship(self.loader, self.task_mgr, self.accept, "./Assets/Spaceships/Dumbledore/Dumbledore.x", self.render, "Spaceship","./Assets/Spaceships/Dumbledore/spacejet_C.png" ,(-1000, 1000, 800), 50)
+            self.Ship = playerclass.Spaceship(self.loader, self.task_mgr, self.accept, "./Assets/Spaceships/Dumbledore/Dumbledore.x", self.render, "Spaceship","./Assets/Spaceships/Dumbledore/spacejet_C.png" ,(-1000, 1000, 800), 50, self.cTrav)
+            #Wanderer
+            #self.Wanderer = space_jam_classes.Wanderer(self.loader, "./Assets/Drone Defender/DroneDefender.x", self.render, "Drone", 6.0, "./Assets/Drone Defender/octotoad1_auv.png", self.Ship)
+
 
             self.cTrav = CollisionTraverser()
-            self.cTrav.traverse(self.render)
+            #self.cTrav.traverser(self.render)
             self.pusher = CollisionHandlerPusher()
             #self.pusher.addCollider(self.Ship, self.Ship.modelNode)
             #self.cTrav.addCollider(self.Ship, self.pusher)
 
             self.cTrav.showCollisions(self.render)
 
-            #Particles
-            self.cntExplode = 0
-            self.explodeIntervals = {}
-
-            #self.traverser = traverser
-
-            self.handler = CollisionHandlerEvent()
-
-            self.handler.addInPattern('into')
-            self.accept('into', self.HandleInto)
-
-            #self.Sentinal1 = space_jam_classes.Orbiter(self.loader, self.taskMgr, self.rootAssetFolder + "./Assets/DroneDefender/DroneDefender.obj", self.render,
-            #"Drone", 6.0, self.rootAssetFolder + "/DroneDefender/DroneDefender.auv", self.Planet5, "MLB", self.Ship)
-            #self.Sentinal2 = space_jam_classes.Orbiter(self.loader, self.taskMgr, self.rootAssetFolder + "./Assets/DroneDefender/DroneDefender.obj", self.render,
-            #"Drone", 6.0, self.rootAssetFolder + "/DroneDefender/DroneDefender.auv", self.Planet5, "MLB", self.Ship)
+            
+            self.Sentinal1 = space_jam_classes.Orbiter(self.loader, self.taskMgr, "./Assets/Drone Defender/DroneDefender.x", self.render,
+            "Drone", 6.0,  "./Assets/Drone Defender/Drones.jpg", self.Planet5, 900 ,"MLB", self.Ship)
+            self.Sentinal2 = space_jam_classes.Orbiter(self.loader, self.taskMgr, "./Assets/Drone Defender/DroneDefender.x", self.render,
+            "Drone", 6.0,  "./Assets/Drone Defender/Drones.jpg", self.Planet2, 500 ,"Cloud", self.Ship)
             
 
 
@@ -78,6 +71,11 @@ class myApp(ShowBase):
         
 
             fullCycle = 60
+            halfCycle = 130
+            cycle_3 = 200
+            cycle_4 = 70
+            cycle_5 = 111
+            cycle_6 = 1000
 
             for j in range(fullCycle):
                 space_jam_classes.Drone.droneCount += 1
@@ -85,6 +83,43 @@ class myApp(ShowBase):
 
                 self.DrawCloudDefense(self.Planet1, nickName)
                 self.DrawBaseballSeams(self.SpaceStation1, nickName, j, fullCycle, 2)
+            
+            for j in range(halfCycle):
+                space_jam_classes.Drone.droneCount += 1
+                nickName = "Drone" + str(space_jam_classes.Drone.droneCount)
+
+                self.DrawCloudDefense(self.Planet2, nickName)
+                self.DrawBaseballSeams(self.Planet3, nickName, j, halfCycle, 5)
+
+            for j in range(cycle_3):
+                space_jam_classes.Drone.droneCount += 1
+                nickName = "Drone" + str(space_jam_classes.Drone.droneCount)
+
+                self.DrawCloudDefense(self.Planet3, nickName)
+                self.DrawBaseballSeams(self.Planet3, nickName, j, cycle_3, 5)
+            
+            for j in range(cycle_4):
+                space_jam_classes.Drone.droneCount += 1
+                nickName = "Drone" + str(space_jam_classes.Drone.droneCount)
+
+                self.DrawCloudDefense(self.Planet4, nickName)
+                self.DrawBaseballSeams(self.Planet4, nickName, j, cycle_4, 1)
+            
+            for j in range(cycle_5):
+                space_jam_classes.Drone.droneCount += 1
+                nickName = "Drone" + str(space_jam_classes.Drone.droneCount)
+
+                self.DrawCloudDefense(self.Planet5, nickName)
+                self.DrawBaseballSeams(self.Planet5, nickName, j, cycle_5, 1)
+            
+            for j in range(cycle_6):
+                space_jam_classes.Drone.droneCount += 1
+                nickName = "Drone" + str(space_jam_classes.Drone.droneCount)
+
+                self.DrawCloudDefense(self.Planet6, nickName)
+                self.DrawBaseballSeams(self.Planet5, nickName, j, cycle_6, 5)
+
+
 
 
             
@@ -156,62 +191,6 @@ class myApp(ShowBase):
             self.parent.instanceTo(self.placeholder2)
             z = z + 0.06
          
-
-    def HandleInto(self, entry):
-        fromNode = entry.getFromNodePath().getName()
-        print('fromNode' + fromNode)
-        intoNode = entry.getIntoNodePath().getName()
-        print('intoNode' + intoNode)
-
-        intoPosition = Vec3(entry.getSurfacePoint(self.render))
-
-        tempvar = fromNode.split("_")
-        print("Tempvar : " + str(tempvar))
-        shooter = tempvar[0]
-        print("shooter: " + str(shooter))
-        tempvar = intoNode.split("_")
-        print("tempvar1 : " + str(tempvar))
-        tempvar = intoNode.split("_")
-        print("tempvar2 : " + str(tempvar))
-        victim = tempvar[2]
-        print("Victim: " + str(victim))
-
-        pattern = r'[0-9]'
-        strippedString = re.sub(pattern, "", victim)
-
-        if(strippedString == "Drone" or strippedString == "Planet" or strippedString == "Space Station"):
-            print(victim, "hit at", intoPosition)
-            self.DestroyObject(victim, intoPosition)
-        print(shooter + "Is Done")
-        Missle.Intervals[shooter].finish()
-
-    def DestroyObject(self, hitID, hitPosition):
-        nodeID = self.render.find(hitID)
-        nodeID.detachNode()
-
-        #start the explosion
-        self.explodeNode.setPos(hitPosition)
-        self.Explode()
-
-    def Explode(self):
-        self.cnt += 1
-        tag = 'particles-' + str(self.cnt)
-
-        self.explodeIntervals[tag] = LerpFunc(self.ExplodeLight, duration = 4.0)
-        self.explodeIntervals[tag].start() 
-    
-    def ExplodeLight(self, t):
-        if t == 1.0 and self.ExplodeEffect:
-            self.explodeEffect.disable()
-        elif t == 0:
-            self.ExplodeEffect.start(self.explodeNode)
-    
-    def SetParticles(self):
-        base.enableParticles()
-        self.ExplodeEffect = ParticleEffect()
-        self.ExplodeEffect.loadConfig("./Assets/ParticleEffects/Explosions/basic_xpld_efx.ptf")
-        self.ExplodeEffect.setScale(20)
-        self.ExplodeNode = self.render.attachNewNode('ExplosionEffects')
 
 
 

@@ -4,9 +4,10 @@ from direct.task.Task import TaskManager
 from typing import Callable
 from direct.task import Task
 import Space_Jam_Classes as space_jam_classes
-from direct.gui.OnscreenImage import OnscreenImage
+from direct.gui.OnscreenImage import OnscreenImage, TransparencyAttrib
 
 from panda3d.core import CollisionHandlerEvent
+from panda3d.core import CollisionTraverser
 from direct.interval.LerpInterval import LerpFunc
 from direct.particles.ParticleEffect import ParticleEffect
 import re
@@ -14,7 +15,7 @@ import re
 
 
 class Spaceship(SphereCoilliableObject):
-    def __init__(self, loader: Loader, taskMGR: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode: NodePath, nodeName: str, texPath: str ,posVec: Vec3, scaleVec: float):
+    def __init__(self, loader: Loader, taskMGR: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode: NodePath, nodeName: str, texPath: str ,posVec: Vec3, scaleVec: float, Traverser: CollisionTraverser):
         super(Spaceship, self).__init__(loader, modelPath, parentNode, nodeName, 0,0,1, 1)
 
         self.loader = loader
@@ -23,6 +24,7 @@ class Spaceship(SphereCoilliableObject):
         self.render = parentNode
         self.modelNode.setPos(posVec)
         self.modelNode.setScale(scaleVec)
+        self.traverser = CollisionTraverser()
         self.modelNode.setName(nodeName)
         tex = loader.loadTexture(texPath)
         self.modelNode.setTexture(tex, 1)
@@ -34,28 +36,26 @@ class Spaceship(SphereCoilliableObject):
 
 
         self.reloadTime = .25
-        self.missleDistance = 4000 #Until missle explodes
+        self.missleDistance = 400 #Until missle explodes
         self.missleBay = 1
 
         self.S_reloadTime = .10
-        self.S_missleDistance = 1000
+        self.S_missleDistance = 200
         self.S_missleBay = 2
 
         self.cntExplode = 0
         self.explodeIntervlas = {}
         
-        #self.traverser = traverser
-
         self.handler = CollisionHandlerEvent()
         self.handler.addInPattern('into')
-        #self.accept('into', self.HandleInto)
+        self.accept('into', self.HandleInto)
 
 
 
 
     def CheckIntervals(self, task):
         for i in space_jam_classes.Missle.Intervals:
-            if not space_jam_classes.Missle.Intervals[i].isplaying():
+            if not space_jam_classes.Missle.Intervals[i].isPlaying():
                 space_jam_classes.Missle.cNodes[i].detachNode()
                 space_jam_classes.Missle.firemodels[i].detachNode()
                 
@@ -66,10 +66,11 @@ class Spaceship(SphereCoilliableObject):
                 print(i + "Has reached the end on its firiing position")
 
                 break
-            return Task.cont 
-         
+        return Task.cont 
+    
     def EnableHUD(self):
         self.Hud = OnscreenImage(image= "./Assets/Hud/Reticle3b.png", pos = Vec3(0, 0, 0), scale = 0.1)
+        self.Hud.setTransparency(TransparencyAttrib.MAlpha)
     
     def SetKeyBindings(self):
         self.accept('space', self.Thrust, [1])
@@ -123,7 +124,7 @@ class Spaceship(SphereCoilliableObject):
             self.TaskMGR.remove('boost')
     
     def ApplyBoost(self, task):
-        rate = 15
+        rate = 25
         trajectory = self.render.getRelativeVector(self.modelNode, Vec3.forward())
         trajectory.normalize()
 
@@ -222,11 +223,11 @@ class Spaceship(SphereCoilliableObject):
 
             posVec = self.modelNode.getPos() + inFront #Spawns the missles in front of ship
             #Create Missle
-            currentMissle = space_jam_classes.Missle(self.loader, './Assets/Phaser/phaser.x', self.render, tag, posVec, 7.0)     
+            currentMissle = space_jam_classes.Missle(self.loader, './Assets/Phaser/phaser.egg', self.render, tag, posVec, 4.0)     
             space_jam_classes.Missle.Intervals[tag] = currentMissle.modelNode.posInterval(2.0, travVec, startPos = posVec, fluid = 1)
             space_jam_classes.Missle.Intervals[tag].start()
 
-            #self.traverser.addCollider(currentMissle.collisionNode, self.handler)
+            self.traverser.addCollider(currentMissle.collisionNode, self.handler)
 
         else:
              # If we aren't reloading, we want to start reloading
@@ -242,7 +243,7 @@ class Spaceship(SphereCoilliableObject):
             aim = self.render.getRelativeVector(self.modelNode, Vec3.forward())
             aim.normalize()
             fireSolution = aim * travRate
-            inFront = aim * 150
+            inFront = aim * 450
 
             travVec = fireSolution + self.modelNode.getPos()
             self.S_missleBay -= 2
@@ -307,3 +308,39 @@ class Spaceship(SphereCoilliableObject):
 
         pattern = r'[0-9]'
         strippedString = re.sub(pattern, '', victim)
+
+        if (strippedString == "Drone" or strippedString == "Planet" or strippedString == "Space Station"):
+            print("victim hit at: ", intoPosition)
+            self.destroyObject(victim, intoPosition)
+
+        print(shooter + "is DONE")
+        space_jam_classes.Missle.Intervals[shooter].finish()
+
+    def destroyObject(self, hitID, hitPosition):
+        nodeID = self.render.find(hitID)
+        nodeID.detachNode()
+
+        #Start the explosion
+        self.explodeNode.setPos(hitPosition)
+        self.Explode()
+
+    def Explode(self):
+        self.cntExplode += 1
+        tag = "Particles" + str(self.cntExplode)
+
+        self.explodeIntervlas[tag] = LerpFunc(self.ExplodeLight, duration = 4.0)
+        self.explodeIntervlas[tag].start()
+
+    def ExplodeLight(self, t):
+        if t == 1.0 and self.explodeEffect:
+            self.explodeEffect.disable()
+
+        elif t == 0:
+            self.explodeEffect.start(self.explodeNode)
+
+    def SetParticles(self):
+        base.enableParticles()
+        self.explodeEffect = ParticleEffect
+        self.explodeEffect.loadConfig("./Assets/ParticleEffects/Explosions/basic_xlpd_efx.ptf")
+        self.explodeEffect.setScale(20)
+        self.explodeEffect = self.render.attachNewNode('ExplosionEffects')

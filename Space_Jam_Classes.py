@@ -5,6 +5,8 @@ from direct.task.Task import TaskManager
 from CollideObjectBase import *
 from direct.gui.OnscreenImage import OnscreenImage
 import defensePaths as Defensepaths
+from direct.interval.IntervalGlobal import *
+
 
 
 
@@ -209,6 +211,7 @@ class Missle(SphereCoilliableObject):
         self.modelNode = loader.loadModel(modelPath)
         self.modelNode.setScale(scaleVec)
         self.modelNode.setPos(posVec)
+        self.modelNode.reparentTo(parentNode)
 
         Missle.missleCount += 1
         Missle.firemodels[nodeName] = self.modelNode
@@ -226,13 +229,14 @@ class Orbiter(SphereCoilliableObject):
 
     def __init__(self, loader: Loader, taskMGR: TaskManager ,modelPath: str, parentNode: NodePath, nodeName: str, scaleVec: Vec3, texpath : str,
                  centralObject: PlacedObject, orbitRadius: float, orbitType: str, staringAt: Vec3):
-        super(Orbiter, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0,0,0), 3.2)
+        super(Orbiter, self).__init__(loader, modelPath, parentNode, nodeName, 0,0,0, 3.2)
        
         self.taskMgr = taskMGR
         self.orbitType = orbitType
         self.modelNode.setScale(scaleVec)
         tex = loader.loadTexture(texpath)
         self.modelNode.setTexture(tex, 1)
+        self.modelNode.reparentTo(parentNode)
         self.orbitObject = centralObject
         self.orbitRadius = orbitRadius
         self.startingat = staringAt
@@ -241,7 +245,7 @@ class Orbiter(SphereCoilliableObject):
         self.cloudClock = 0
 
         self.taskFlag = "Traveler-" + str(Orbiter.numOrbits)
-        taskMGR.add(self.Orbit, self.taskFlag)
+        taskMGR.add(self.orbit, self.taskFlag)
 
     def orbit(self, task):
         if self.orbitType == "MLB":
@@ -261,7 +265,27 @@ class Orbiter(SphereCoilliableObject):
         return Task.cont
 
 
-      
+class Wanderer(SphereCoilliableObject):
+
+    numWanderers = 0
+
+    def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, modelName: str , scaleVec: Vec3, texPath: str, staringAt: Vec3):
+        super(Wanderer, self).__init__(loader, modelPath, parentNode, modelName, 0,0,0, 3.2)
+
+        self.modelNode.setScale(scaleVec)
+        tex = loader.loadTexture(texPath)
+        self.modelNode.setTexture(tex, 1)
+        self.modelNode.reparentTo(parentNode)
+        self.staringAt = staringAt
+        Wanderer.numWanderers += 1
+
+        posInterval0 = self.modelNode.posInterval(20, Vec3(300, 6000, 500), startPos = Vec3(0,0,0))
+        posInterval1 = self.modelNode.posInterval(20, Vec3(700, -2000, 100), startPos = Vec3(300, 6000, 500))
+        posInterval2 = self.modelNode.posInterval(20, Vec3(0, -900, -1400), startPos = Vec3(700, -2000, 100))
+
+        self.travelRoute = Sequence(posInterval0, posInterval1, posInterval2, name = 'Traveler')
+
+        self.travelRoute.loop()
 
 
     
